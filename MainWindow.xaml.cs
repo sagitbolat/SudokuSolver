@@ -39,7 +39,7 @@ namespace SudokuSolver {
             Brush buttonFGBrush = new SolidColorBrush(buttonFGColor);
             //FontFamily buttonFont = new FontFamily(new Uri("pack://application:,,,"), "FuturaBook.ttf");
 
-            //iterate over the whole grid
+            //iterate over the whole grid and add in the button components
             for (int x = 0; x < 9; x++) {
                 for (int y = 0; y < 9; y++) {
                     //create button
@@ -49,7 +49,7 @@ namespace SudokuSolver {
                     button.Background = buttonBGBrush;
                     button.Foreground = buttonFGBrush;
                     button.Content = "j";
-                    button.FontSize = 40;
+                    button.FontSize = 19;
                     //button.FontFamily = buttonFont;
 
                     //add button to array
@@ -60,6 +60,17 @@ namespace SudokuSolver {
                     Grid.SetColumn(button, x);
                     grid.Children.Add(button);
                 }
+            }
+
+            //generate sudoku solution
+            SudokuGenerator generator = new SudokuGenerator();
+            int[,] numGrid = generator.Generate();
+
+            //fill in the button text to match the sudoku grid
+            for (int i = 0; i < 81; i++) {
+                int y = i / 9;
+                int x = i % 9;
+                buttonArray[x, y].Content = numGrid[x, y];
             }
         }
     }
