@@ -15,17 +15,11 @@ namespace SudokuSolver {
 
             //Generate a complete solution using backtracking that fills up the grid
             Random random = new Random();
-
             GenerateCompleteSolution(puzzleGrid, random);
-            //TODO: Remove numbers from the grid, while making sure the solution is still unique.
 
-            //DEBUG: print grid to console
-            for (int i = 0; i < puzzleGrid.GetLength(0); i++) {
-                for (int j = 0; j < puzzleGrid.GetLength(1); j++) {
-                    Console.Write(puzzleGrid[i, j] + "\t");
-                }
-                Console.WriteLine();
-            }
+            //Remove numbers from the grid, while making sure the solution is still unique.
+            RemoveNumbersFromGrid(puzzleGrid, random);
+            
 
             return puzzleGrid;
         }
@@ -63,6 +57,7 @@ namespace SudokuSolver {
             grid[x, y] = 0;
             return false;
         }
+
 
         //checks if num can go into the x and y coordinates of the grid by following sudoku rules
         private bool isGridValid(int[,] grid, int x, int y, int num) {
@@ -123,6 +118,81 @@ namespace SudokuSolver {
                 if (grid[x, y] == 0) return true;
             }
             return false;
+        }
+
+
+        //Removes numbers from a complete solution to generate a sudoku puzzle.
+        //Ensures there is only one solution.
+        private void RemoveNumbersFromGrid(int[,] grid, Random random) {
+            //count and find nonempty squares in grid.
+            int nonEmptySqaresCount = 0;
+            int[][] nonEmptySquares = GetNonEmptySquares(out nonEmptySqaresCount, grid);
+
+            //Shuffle nonEmptySquares while perserving the pairings of coordinates
+            nonEmptySquares = nonEmptySquares.OrderBy(a => random.Next()).ToArray();
+
+
+            //limit the number of failed attempts to 3
+            int rounds = 3;
+
+            int currSquare = 0;
+            while (rounds > 0 && nonEmptySqaresCount > 17) {
+                //get next nonEmptySquare
+                int x = nonEmptySquares[currSquare][0];
+                int y = nonEmptySquares[currSquare][1];
+                currSquare++;
+                nonEmptySqaresCount--;
+
+                //store the removed value and then empty the square
+                int removed_value = grid[x, y];
+                grid[x, y] = 0;
+
+                //copy the grid array;
+                int[,] gridCopy = new int[9, 9];
+                for (int i = 0; i < 81; i++) {
+                    int _x = i % 9;
+                    int _y = i / 9;
+                    gridCopy[_x, _y] = grid[_x, _y];
+                }
+
+                //Solve the Grid
+                Solver solver = new Solver();
+                bool isSolutionUnique = solver.Solve(grid);
+                
+                //if solution is not unique, put the last removed number back and try again
+                if (!isSolutionUnique) {
+                    grid[x, y] = removed_value;
+                    nonEmptySqaresCount++;
+                    currSquare--;
+                    rounds--;
+                }
+            }
+            return;
+        }
+
+        private int[][] GetNonEmptySquares(out int nonEmptyCount, int[,] grid) {
+            //count how many nonempty squares there are;
+            int numNonEmpty = 0;
+            for (int i = 0; i < 81; i++) {
+                int x = i % 9;
+                int y = i / 9;
+                if (grid[x, y] == 0) continue;
+                numNonEmpty++;
+            }
+            nonEmptyCount = numNonEmpty;
+
+            //initialize array of squares;
+            int[][] nonEmptySquares = new int[numNonEmpty][];
+            //add all nonempty squares to the array
+            for (int i = 0; i < 81; i++) {
+                int x = i % 9;
+                int y = i / 9;
+                if (grid[x, y] == 0) continue;
+                int[] square = { x, y };
+                nonEmptySquares[i] = square;
+            }
+
+            return nonEmptySquares;
         }
     }
 }

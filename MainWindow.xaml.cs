@@ -70,7 +70,8 @@ namespace SudokuSolver {
             for (int i = 0; i < 81; i++) {
                 int y = i / 9;
                 int x = i % 9;
-                buttonArray[x, y].Content = numGrid[x, y];
+                int value = numGrid[x, y];
+                buttonArray[x, y].Content = value > 0 ? value.ToString() : " ";
             }
         }
     }
