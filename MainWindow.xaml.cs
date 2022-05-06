@@ -18,25 +18,48 @@ namespace SudokuSolver {
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
+        Button[,] buttonArray = new Button[9,9];
+        Grid gridControl;
+        int[,] numGrid;
+
+        Color fg;
+        Color bg;
+        Color accent;
+
+        UpdateButtonCommand updateCommand;
+
         public MainWindow() {
             InitializeComponent();
 
-            Button[,] buttonArray = new Button[9,9];
-            Grid grid = PlayGrid;
+            gridControl = PlayGrid;
 
-            Color buttonBGColor = new Color();
-            buttonBGColor.R = 221;
-            buttonBGColor.G = 221;
-            buttonBGColor.B = 221;
-            buttonBGColor.A = 225;
-            Brush buttonBGBrush = new SolidColorBrush(buttonBGColor);
+            fg = Color.FromRgb(34, 40, 49);
+            bg = Color.FromRgb(221, 221, 221);
+            accent = Color.FromRgb(240, 84, 84);
 
-            Color buttonFGColor = new Color();
-            buttonFGColor.R = 34;
-            buttonFGColor.G = 40;
-            buttonFGColor.B = 49;
-            buttonFGColor.A = 225;
-            Brush buttonFGBrush = new SolidColorBrush(buttonFGColor);
+            updateCommand = new UpdateButtonCommand(buttonArray, new SolidColorBrush(fg));
+
+            //setup buttons
+            ButtonSetup();
+
+            //assign Events
+            GenerateButton.Click += GenerateButtonPressed;
+
+            SolveButton.Click += SolveButtonPressed;
+
+        }
+
+        private void GenerateButtonPressed(object sender, RoutedEventArgs e) {
+            GenerateGrid();
+        }
+
+        private void SolveButtonPressed(object sender, RoutedEventArgs e) {
+            SolveGrid();
+        }
+
+        private void ButtonSetup() {
+            Brush buttonBGBrush = new SolidColorBrush(bg);
+            Brush buttonFGBrush = new SolidColorBrush(fg);
             //FontFamily buttonFont = new FontFamily(new Uri("pack://application:,,,"), "FuturaBook.ttf");
 
             //iterate over the whole grid and add in the button components
@@ -48,23 +71,31 @@ namespace SudokuSolver {
                     //set button asthetics
                     button.Background = buttonBGBrush;
                     button.Foreground = buttonFGBrush;
-                    button.Content = "j";
+                    button.BorderBrush = buttonFGBrush;
+                    button.Content = " ";
                     button.FontSize = 19;
                     //button.FontFamily = buttonFont;
 
                     //add button to array
                     buttonArray[x, y] = button;
-                    
+
                     // add the button to the grid control
                     Grid.SetRow(button, y);
                     Grid.SetColumn(button, x);
-                    grid.Children.Add(button);
+                    gridControl.Children.Add(button);
                 }
             }
+        }
 
+        private void GenerateGrid() {
             //generate sudoku solution
             SudokuGenerator generator = new SudokuGenerator();
-            int[,] numGrid = generator.Generate();
+
+            if (GuaranteeCheckbox.IsChecked == true) {
+                numGrid = generator.Generate(true, updateCommand);
+            } else {
+                numGrid = generator.Generate(false, updateCommand);
+            }
 
             //fill in the button text to match the sudoku grid
             for (int i = 0; i < 81; i++) {
@@ -72,6 +103,44 @@ namespace SudokuSolver {
                 int x = i % 9;
                 int value = numGrid[x, y];
                 buttonArray[x, y].Content = value > 0 ? value.ToString() : " ";
+                buttonArray[x, y].Foreground = new SolidColorBrush(fg);
+            }
+        }
+        private void SolveGrid() {
+            Solver solver = new Solver(updateCommand);
+            if (numGrid == null || numGrid.Length != 81) return;
+            solver.Solve(numGrid);
+
+            // fill in the button text to match the sudoku grid
+            for (int i = 0; i < 81; i++) {
+                int y = i / 9;
+                int x = i % 9;
+                int value = numGrid[x, y];
+
+                Button button = buttonArray[x, y];
+                if (value.ToString() != button.Content.ToString()) {
+                    buttonArray[x, y].Foreground = new SolidColorBrush(accent);
+                }
+                buttonArray[x, y].Content = value;// > 0 ? value.ToString() : " ";
+            }
+        }
+    }
+
+    public class UpdateButtonCommand {
+        Button[,] buttons;
+        SolidColorBrush fg;
+        public UpdateButtonCommand(Button[,] buttons, SolidColorBrush fg) {
+            this.buttons = buttons;
+            this.fg = fg;
+        }
+        public void Execute(int[,] grid) {
+            //fill in the button text to match the sudoku grid
+            for (int i = 0; i < 81; i++) {
+                int y = i / 9;
+                int x = i % 9;
+                int value = grid[x, y];
+                buttons[x, y].Content = value > 0 ? value.ToString() : " ";
+                //buttons[x, y].Foreground = fg;
             }
         }
     }

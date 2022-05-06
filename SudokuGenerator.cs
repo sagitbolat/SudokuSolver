@@ -3,27 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace SudokuSolver {
     class SudokuGenerator {
-
+        UpdateButtonCommand updateCommand;
         //Generates a grid of integers;
-        public int[,] Generate() {
+        public int[,] Generate(bool guaranteeSingleSolution, UpdateButtonCommand updateCommand) {
             //a 9x9 array of integers that represents our sudoku grid
             int[,] puzzleGrid = new int[9, 9];
 
+            this.updateCommand = updateCommand;
 
             //Generate a complete solution using backtracking that fills up the grid
             Random random = new Random();
             GenerateCompleteSolution(puzzleGrid, random);
 
             //Remove numbers from the grid, while making sure the solution is still unique.
-            RemoveNumbersFromGrid(puzzleGrid, random);
+            RemoveNumbersFromGrid(puzzleGrid, random, guaranteeSingleSolution);
             
 
             return puzzleGrid;
         }
 
+        private void UpdateGridAndUI(int[,] grid, int num, int x, int y) {
+            grid[x, y] = num;
+            updateCommand.Execute(grid);
+        }
 
         //Generates a sudoku grid where all the numbers are filled out. 
         //This is also the final solution that the user will arrive at.
@@ -42,7 +48,10 @@ namespace SudokuSolver {
                     numbers = numbers.OrderBy(a => random.Next()).ToArray();
                     foreach (int num in numbers) {
                         if (isGridValid(grid, x, y, num)) {
-                            grid[x, y] = num;
+
+                            //update grid
+                            UpdateGridAndUI(grid, num, x, y);
+
                             if (!FindEmptySquare(grid)) {
                                 return true;
                             } else if (GenerateCompleteSolution(grid, random)) {
@@ -54,13 +63,13 @@ namespace SudokuSolver {
                     break;
                 }
             }
-            grid[x, y] = 0;
+            UpdateGridAndUI(grid, 0, x, y);
             return false;
         }
 
 
         //checks if num can go into the x and y coordinates of the grid by following sudoku rules
-        private bool isGridValid(int[,] grid, int x, int y, int num) {
+        public static bool isGridValid(int[,] grid, int x, int y, int num) {
             //if num is not between 1- 9 => return false
             //if (num < 1 || num > 9) return false;
 
@@ -111,7 +120,7 @@ namespace SudokuSolver {
         }
 
         //returns true if there is an empty square in the grid
-        private bool FindEmptySquare(int[,] grid) {
+        public static bool FindEmptySquare(int[,] grid) {
             for (int i = 0; i < 81; i++) {
                 int x = i % 9;
                 int y = i / 9;
@@ -123,7 +132,7 @@ namespace SudokuSolver {
 
         //Removes numbers from a complete solution to generate a sudoku puzzle.
         //Ensures there is only one solution.
-        private void RemoveNumbersFromGrid(int[,] grid, Random random) {
+        private void RemoveNumbersFromGrid(int[,] grid, Random random, bool guaranteeSingleSolution) {
             //count and find nonempty squares in grid.
             int nonEmptySqaresCount = 0;
             int[][] nonEmptySquares = GetNonEmptySquares(out nonEmptySqaresCount, grid);
@@ -145,7 +154,8 @@ namespace SudokuSolver {
 
                 //store the removed value and then empty the square
                 int removed_value = grid[x, y];
-                grid[x, y] = 0;
+                UpdateGridAndUI(grid, 0, x, y);
+
 
                 //copy the grid array;
                 int[,] gridCopy = new int[9, 9];
@@ -156,9 +166,10 @@ namespace SudokuSolver {
                 }
 
                 //Solve the Grid
-                Solver solver = new Solver();
-                bool isSolutionUnique = solver.Solve(grid);
-                
+                Solver solver = new Solver(updateCommand);
+                bool isSolutionUnique = true;
+                if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy);
+
                 //if solution is not unique, put the last removed number back and try again
                 if (!isSolutionUnique) {
                     grid[x, y] = removed_value;

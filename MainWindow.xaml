@@ -6,42 +6,81 @@
         xmlns:local="clr-namespace:SudokuSolver"
         mc:Ignorable="d"
         ResizeMode="NoResize"
-        Title="SudokuSolver" Height="315" Width="385">
-    <Grid Background="#222831" Name="PlayGrid">
+        Background="#222831"
+        Title="SudokuSolver" Height="395" Width="325">
+    <Grid Background="#222831" Margin="5px">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            
-            <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="9*"/>
 
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-
-            <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button 
-            Grid.Row="1" Grid.Column="9"
+        <Grid 
+            Background="#222831" 
+            Name="PlayGrid" Margin="3px"
+            Grid.Row="0" Grid.Column="0"
+            Grid.ColumnSpan="2"
+        >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+        </Grid>
+        <Button
+            Name="GenerateButton"
+            Grid.Row="1" Grid.Column="0"
             Foreground="#222831"
             Background="#DDDDDD"
+            BorderBrush="#222831"
             FontSize="14"
+            Margin="3px"
         > Generate
         </Button>
+        <Button
+            Name="SolveButton"
+            Grid.Row="1" Grid.Column="1"
+            Foreground="#222831"
+            Background="#DDDDDD"
+            BorderBrush="#222831"
+            FontSize="14"
+            Margin="3px"
+            
+        >Solve
+        </Button>
+        <CheckBox
+            Name="GuaranteeCheckbox"
+            Grid.Row="10"
+            Grid.Column="0"
+            Margin="3px"
+            Background="#DDDDDD"
+            Foreground="#222831"
+            BorderBrush="#222831"
+        ></CheckBox>
     </Grid>
 </Window>
