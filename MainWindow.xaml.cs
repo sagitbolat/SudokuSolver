@@ -26,8 +26,6 @@ namespace SudokuSolver {
         Color bg;
         Color accent;
 
-        UpdateButtonCommand updateCommand;
-
         public MainWindow() {
             InitializeComponent();
 
@@ -36,8 +34,6 @@ namespace SudokuSolver {
             fg = Color.FromRgb(34, 40, 49);
             bg = Color.FromRgb(221, 221, 221);
             accent = Color.FromRgb(240, 84, 84);
-
-            updateCommand = new UpdateButtonCommand(buttonArray, new SolidColorBrush(fg));
 
             //setup buttons
             ButtonSetup();
@@ -92,9 +88,9 @@ namespace SudokuSolver {
             SudokuGenerator generator = new SudokuGenerator();
 
             if (GuaranteeCheckbox.IsChecked == true) {
-                numGrid = generator.Generate(true, updateCommand);
+                numGrid = generator.Generate(true);
             } else {
-                numGrid = generator.Generate(false, updateCommand);
+                numGrid = generator.Generate(false);
             }
 
             //fill in the button text to match the sudoku grid
@@ -107,7 +103,7 @@ namespace SudokuSolver {
             }
         }
         private void SolveGrid() {
-            Solver solver = new Solver(updateCommand);
+            Solver solver = new Solver();
             if (numGrid == null || numGrid.Length != 81) return;
             solver.Solve(numGrid);
 
@@ -125,23 +121,5 @@ namespace SudokuSolver {
             }
         }
     }
-
-    public class UpdateButtonCommand {
-        Button[,] buttons;
-        SolidColorBrush fg;
-        public UpdateButtonCommand(Button[,] buttons, SolidColorBrush fg) {
-            this.buttons = buttons;
-            this.fg = fg;
-        }
-        public void Execute(int[,] grid) {
-            //fill in the button text to match the sudoku grid
-            for (int i = 0; i < 81; i++) {
-                int y = i / 9;
-                int x = i % 9;
-                int value = grid[x, y];
-                buttons[x, y].Content = value > 0 ? value.ToString() : " ";
-                //buttons[x, y].Foreground = fg;
-            }
-        }
-    }
+    
 }

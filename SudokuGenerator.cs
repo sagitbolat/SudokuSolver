@@ -7,13 +7,10 @@ using System.Threading;
 
 namespace SudokuSolver {
     class SudokuGenerator {
-        UpdateButtonCommand updateCommand;
         //Generates a grid of integers;
-        public int[,] Generate(bool guaranteeSingleSolution, UpdateButtonCommand updateCommand) {
+        public int[,] Generate(bool guaranteeSingleSolution) {
             //a 9x9 array of integers that represents our sudoku grid
             int[,] puzzleGrid = new int[9, 9];
-
-            this.updateCommand = updateCommand;
 
             //Generate a complete solution using backtracking that fills up the grid
             Random random = new Random();
@@ -28,7 +25,6 @@ namespace SudokuSolver {
 
         private void UpdateGridAndUI(int[,] grid, int num, int x, int y) {
             grid[x, y] = num;
-            updateCommand.Execute(grid);
         }
 
         //Generates a sudoku grid where all the numbers are filled out. 
@@ -166,7 +162,7 @@ namespace SudokuSolver {
                 }
 
                 //Solve the Grid
-                Solver solver = new Solver(updateCommand);
+                Solver solver = new Solver();
                 bool isSolutionUnique = true;
                 if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy);
 

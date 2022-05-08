@@ -7,15 +7,8 @@ using System.Threading.Tasks;
 namespace SudokuSolver {
     class Solver {
 
-        UpdateButtonCommand updateCommand;
-
-        public Solver(UpdateButtonCommand uc) {
-            updateCommand = uc;
-        }
-
         private void UpdateGridAndUI(int[,] grid, int num, int x, int y) {
             grid[x, y] = num;
-            updateCommand.Execute(grid);
         }
 
         public bool Solve(int[,] grid) {
