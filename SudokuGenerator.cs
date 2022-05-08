@@ -4,32 +4,56 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Windows.Controls;
+using System.Windows.Media;
+
+
 
 namespace SudokuSolver {
     class SudokuGenerator {
+
+        int iterations;
+        public SudokuGenerator() {
+            iterations = 0;
+        }
+
         //Generates a grid of integers;
-        public int[,] Generate(bool guaranteeSingleSolution) {
+        public async Task<int[,]> Generate(bool guaranteeSingleSolution, Button[,] buttons, TextBlock iterationText) {
             //a 9x9 array of integers that represents our sudoku grid
             int[,] puzzleGrid = new int[9, 9];
 
             //Generate a complete solution using backtracking that fills up the grid
             Random random = new Random();
-            GenerateCompleteSolution(puzzleGrid, random);
+            await Task.Run(() => GenerateCompleteSolution(puzzleGrid, random, buttons, iterationText));
 
             //Remove numbers from the grid, while making sure the solution is still unique.
-            RemoveNumbersFromGrid(puzzleGrid, random, guaranteeSingleSolution);
+            await Task.Run(() => RemoveNumbersFromGrid(puzzleGrid, random, guaranteeSingleSolution, buttons, iterationText));
             
 
             return puzzleGrid;
         }
 
-        private void UpdateGridAndUI(int[,] grid, int num, int x, int y) {
+        private void UpdateGridAndUI(int[,] grid, int num, int x, int y, Button[,] buttons) {
             grid[x, y] = num;
+            buttons[x,y].Dispatcher.Invoke(() =>
+            {
+                buttons[x,y].Content = num > 0 ? num.ToString() : " ";
+                Color fg = Color.FromRgb(34, 40, 49);
+                buttons[x, y].Foreground = new SolidColorBrush(fg);
+            });
+            Thread.Sleep(10);
+
+        }
+        private void UpdateIterationsGUI(TextBlock iterationText) {
+            iterations++;
+            iterationText.Dispatcher.Invoke(() => {
+                iterationText.Text = "Iterations: " + iterations.ToString();
+            });
         }
 
         //Generates a sudoku grid where all the numbers are filled out. 
         //This is also the final solution that the user will arrive at.
-        private bool GenerateCompleteSolution(int[,] grid, Random random) {
+        private bool GenerateCompleteSolution(int[,] grid, Random random, Button[,] buttons, TextBlock iterationText) {
             //possible number values in a sudoku puzzle
             int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             int x = 0;
@@ -46,11 +70,13 @@ namespace SudokuSolver {
                         if (isGridValid(grid, x, y, num)) {
 
                             //update grid
-                            UpdateGridAndUI(grid, num, x, y);
+                            UpdateGridAndUI(grid, num, x, y, buttons);
+                            UpdateIterationsGUI(iterationText);
+
 
                             if (!FindEmptySquare(grid)) {
                                 return true;
-                            } else if (GenerateCompleteSolution(grid, random)) {
+                            } else if (GenerateCompleteSolution(grid, random, buttons, iterationText)) {
                                 return true;
                             }
                         }
@@ -59,7 +85,10 @@ namespace SudokuSolver {
                     break;
                 }
             }
-            UpdateGridAndUI(grid, 0, x, y);
+            UpdateGridAndUI(grid, 0, x, y, buttons);
+            UpdateIterationsGUI(iterationText);
+
+
             return false;
         }
 
@@ -128,7 +157,7 @@ namespace SudokuSolver {
 
         //Removes numbers from a complete solution to generate a sudoku puzzle.
         //Ensures there is only one solution.
-        private void RemoveNumbersFromGrid(int[,] grid, Random random, bool guaranteeSingleSolution) {
+        private void RemoveNumbersFromGrid(int[,] grid, Random random, bool guaranteeSingleSolution, Button[,] buttons, TextBlock iterationText) {
             //count and find nonempty squares in grid.
             int nonEmptySqaresCount = 0;
             int[][] nonEmptySquares = GetNonEmptySquares(out nonEmptySqaresCount, grid);
@@ -150,7 +179,9 @@ namespace SudokuSolver {
 
                 //store the removed value and then empty the square
                 int removed_value = grid[x, y];
-                UpdateGridAndUI(grid, 0, x, y);
+                UpdateGridAndUI(grid, 0, x, y, buttons);
+                UpdateIterationsGUI(iterationText);
+
 
 
                 //copy the grid array;
@@ -164,11 +195,11 @@ namespace SudokuSolver {
                 //Solve the Grid
                 Solver solver = new Solver();
                 bool isSolutionUnique = true;
-                if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy);
+                if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy, buttons, iterationText);
 
                 //if solution is not unique, put the last removed number back and try again
                 if (!isSolutionUnique) {
-                    grid[x, y] = removed_value;
+                    UpdateGridAndUI(grid, removed_value, x, y, buttons);
                     nonEmptySqaresCount++;
                     currSquare--;
                     rounds--;

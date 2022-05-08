@@ -21,6 +21,8 @@ namespace SudokuSolver {
         Button[,] buttonArray = new Button[9,9];
         Grid gridControl;
         int[,] numGrid;
+        TextBlock iterationsText;
+        bool executing = false;
 
         Color fg;
         Color bg;
@@ -35,6 +37,8 @@ namespace SudokuSolver {
             bg = Color.FromRgb(221, 221, 221);
             accent = Color.FromRgb(240, 84, 84);
 
+            iterationsText = IterationsTextBlock;
+
             //setup buttons
             ButtonSetup();
 
@@ -45,12 +49,20 @@ namespace SudokuSolver {
 
         }
 
-        private void GenerateButtonPressed(object sender, RoutedEventArgs e) {
-            GenerateGrid();
+        private async void GenerateButtonPressed(object sender, RoutedEventArgs e) {
+            if (executing) return;
+
+            executing = true;
+            await GenerateGrid();
+            executing = false;
         }
 
-        private void SolveButtonPressed(object sender, RoutedEventArgs e) {
-            SolveGrid();
+        private async void SolveButtonPressed(object sender, RoutedEventArgs e) {
+            if (executing) return;
+
+            executing = true;
+            await SolveGrid();
+            executing = false;
         }
 
         private void ButtonSetup() {
@@ -83,14 +95,14 @@ namespace SudokuSolver {
             }
         }
 
-        private void GenerateGrid() {
+        private async Task GenerateGrid() {
             //generate sudoku solution
             SudokuGenerator generator = new SudokuGenerator();
 
             if (GuaranteeCheckbox.IsChecked == true) {
-                numGrid = generator.Generate(true);
+                numGrid = await generator.Generate(true, buttonArray, iterationsText);
             } else {
-                numGrid = generator.Generate(false);
+                numGrid = await generator.Generate(false, buttonArray, iterationsText);
             }
 
             //fill in the button text to match the sudoku grid
@@ -102,23 +114,10 @@ namespace SudokuSolver {
                 buttonArray[x, y].Foreground = new SolidColorBrush(fg);
             }
         }
-        private void SolveGrid() {
+        private async Task SolveGrid() {
             Solver solver = new Solver();
             if (numGrid == null || numGrid.Length != 81) return;
-            solver.Solve(numGrid);
-
-            // fill in the button text to match the sudoku grid
-            for (int i = 0; i < 81; i++) {
-                int y = i / 9;
-                int x = i % 9;
-                int value = numGrid[x, y];
-
-                Button button = buttonArray[x, y];
-                if (value.ToString() != button.Content.ToString()) {
-                    buttonArray[x, y].Foreground = new SolidColorBrush(accent);
-                }
-                buttonArray[x, y].Content = value;// > 0 ? value.ToString() : " ";
-            }
+            await Task.Run(() => solver.Solve(numGrid, buttonArray, iterationsText));
         }
     }
     
