@@ -13,27 +13,49 @@ namespace SudokuSolver {
     class SudokuGenerator {
 
         int iterations;
-        public SudokuGenerator() {
-            iterations = 0;
+        int iterationDelay;
+        Color textColor;
+        Button[,] buttons;
+        TextBlock iterationText;
+        bool guaranteeSingleSolution;
+        int minFilledCells;
+
+        public SudokuGenerator(
+            bool guaranteeSingleSolution, 
+            Color textColor, 
+            int iterationDelay, 
+            Button[,] buttons, 
+            TextBlock iterationText, 
+            int iterations = 0,
+            int minFilledCells = 17) 
+        {
+            this.textColor = textColor;
+            this.iterationDelay = iterationDelay;
+            this.buttons = buttons;
+            this.iterationText = iterationText;
+            this.iterations = iterations;
+
+            this.guaranteeSingleSolution = guaranteeSingleSolution;
+            this.minFilledCells = minFilledCells;
         }
 
         //Generates a grid of integers;
-        public async Task<int[,]> Generate(bool guaranteeSingleSolution, Button[,] buttons, TextBlock iterationText) {
+        public async Task<int[,]> Generate() {
             //a 9x9 array of integers that represents our sudoku grid
             int[,] puzzleGrid = new int[9, 9];
 
             //Generate a complete solution using backtracking that fills up the grid
             Random random = new Random();
-            await Task.Run(() => GenerateCompleteSolution(puzzleGrid, random, buttons, iterationText));
+            await Task.Run(() => GenerateCompleteSolution(puzzleGrid, random));
 
             //Remove numbers from the grid, while making sure the solution is still unique.
-            await Task.Run(() => RemoveNumbersFromGrid(puzzleGrid, random, guaranteeSingleSolution, buttons, iterationText));
+            await Task.Run(() => RemoveNumbersFromGrid(puzzleGrid, random));
             
 
             return puzzleGrid;
         }
 
-        private void UpdateGridAndUI(int[,] grid, int num, int x, int y, Button[,] buttons) {
+        private void UpdateGridAndUI(int[,] grid, int num, int x, int y) {
             grid[x, y] = num;
             buttons[x,y].Dispatcher.Invoke(() =>
             {
@@ -41,10 +63,10 @@ namespace SudokuSolver {
                 Color fg = Color.FromRgb(34, 40, 49);
                 buttons[x, y].Foreground = new SolidColorBrush(fg);
             });
-            Thread.Sleep(10);
+            Thread.Sleep(iterationDelay);
 
         }
-        private void UpdateIterationsGUI(TextBlock iterationText) {
+        private void UpdateIterationsGUI() {
             iterations++;
             iterationText.Dispatcher.Invoke(() => {
                 iterationText.Text = "Iterations: " + iterations.ToString();
@@ -53,7 +75,7 @@ namespace SudokuSolver {
 
         //Generates a sudoku grid where all the numbers are filled out. 
         //This is also the final solution that the user will arrive at.
-        private bool GenerateCompleteSolution(int[,] grid, Random random, Button[,] buttons, TextBlock iterationText) {
+        private bool GenerateCompleteSolution(int[,] grid, Random random) {
             //possible number values in a sudoku puzzle
             int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             int x = 0;
@@ -70,13 +92,13 @@ namespace SudokuSolver {
                         if (isGridValid(grid, x, y, num)) {
 
                             //update grid
-                            UpdateGridAndUI(grid, num, x, y, buttons);
-                            UpdateIterationsGUI(iterationText);
+                            UpdateGridAndUI(grid, num, x, y);
+                            UpdateIterationsGUI();
 
 
                             if (!FindEmptySquare(grid)) {
                                 return true;
-                            } else if (GenerateCompleteSolution(grid, random, buttons, iterationText)) {
+                            } else if (GenerateCompleteSolution(grid, random)) {
                                 return true;
                             }
                         }
@@ -85,8 +107,8 @@ namespace SudokuSolver {
                     break;
                 }
             }
-            UpdateGridAndUI(grid, 0, x, y, buttons);
-            UpdateIterationsGUI(iterationText);
+            UpdateGridAndUI(grid, 0, x, y);
+            UpdateIterationsGUI();
 
 
             return false;
@@ -157,7 +179,7 @@ namespace SudokuSolver {
 
         //Removes numbers from a complete solution to generate a sudoku puzzle.
         //Ensures there is only one solution.
-        private void RemoveNumbersFromGrid(int[,] grid, Random random, bool guaranteeSingleSolution, Button[,] buttons, TextBlock iterationText) {
+        private void RemoveNumbersFromGrid(int[,] grid, Random random) {
             //count and find nonempty squares in grid.
             int nonEmptySqaresCount = 0;
             int[][] nonEmptySquares = GetNonEmptySquares(out nonEmptySqaresCount, grid);
@@ -170,7 +192,7 @@ namespace SudokuSolver {
             int rounds = 3;
 
             int currSquare = 0;
-            while (rounds > 0 && nonEmptySqaresCount > 17) {
+            while (rounds > 0 && nonEmptySqaresCount > minFilledCells) {
                 //get next nonEmptySquare
                 int x = nonEmptySquares[currSquare][0];
                 int y = nonEmptySquares[currSquare][1];
@@ -179,8 +201,8 @@ namespace SudokuSolver {
 
                 //store the removed value and then empty the square
                 int removed_value = grid[x, y];
-                UpdateGridAndUI(grid, 0, x, y, buttons);
-                UpdateIterationsGUI(iterationText);
+                UpdateGridAndUI(grid, 0, x, y);
+                UpdateIterationsGUI();
 
 
 
@@ -193,13 +215,13 @@ namespace SudokuSolver {
                 }
 
                 //Solve the Grid
-                Solver solver = new Solver();
+                Solver solver = new Solver(textColor, iterationDelay, buttons, iterationText, iterations);
                 bool isSolutionUnique = true;
-                if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy, buttons, iterationText);
+                if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy);
 
                 //if solution is not unique, put the last removed number back and try again
                 if (!isSolutionUnique) {
-                    UpdateGridAndUI(grid, removed_value, x, y, buttons);
+                    UpdateGridAndUI(grid, removed_value, x, y);
                     nonEmptySqaresCount++;
                     currSquare--;
                     rounds--;

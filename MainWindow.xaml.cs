@@ -24,10 +24,13 @@ namespace SudokuSolver {
         int[,] numGrid;
         TextBlock iterationsText;
         bool executing = false;
+        
 
         Color fg;
         Color bg;
         Color accent;
+        int iterationDelay = 10;
+        int difficulty = 0;
 
         public MainWindow() {
             InitializeComponent();
@@ -39,6 +42,7 @@ namespace SudokuSolver {
             accent = Color.FromRgb(240, 84, 84);
 
             iterationsText = IterationsTextBlock;
+            difficulty = DifficultySelect.SelectedIndex;
 
             //setup buttons
             ButtonSetup();
@@ -50,11 +54,16 @@ namespace SudokuSolver {
 
             ClearButton.Click += ClearButtonPressed;
 
+            DifficultySelect.SelectionChanged += DifficultyChanged;
+
+            SpeedSelect.SelectionChanged += SpeedChanged;
+
         }
 
         private async void GenerateButtonPressed(object sender, RoutedEventArgs e) {
             if (executing) return;
 
+            await Task.Run(() => ClearGridAsync());
             executing = true;
             await GenerateGrid();
             executing = false;
@@ -69,7 +78,28 @@ namespace SudokuSolver {
         }
 
         private async void ClearButtonPressed(object sender, RoutedEventArgs e) {
+            if (executing) return;
+
             await Task.Run(() => ClearGridAsync());
+        }
+
+        private void DifficultyChanged(object sender, RoutedEventArgs e) {
+            difficulty = DifficultySelect.SelectedIndex;
+        }
+
+        private void SpeedChanged(object sender, RoutedEventArgs e) {
+            iterationDelay = 10;
+            switch(SpeedSelect.SelectedIndex) {
+                case 0:
+                    iterationDelay = 10;
+                    break;
+                case 1:
+                    iterationDelay = 50;
+                    break;
+                case 2:
+                    iterationDelay = 100;
+                    break;
+            }
         }
 
         private void ClearGridAsync() {
@@ -79,7 +109,7 @@ namespace SudokuSolver {
                         buttonArray[x, y].Content = " ";
                         buttonArray[x, y].Foreground = new SolidColorBrush(fg);
                     });
-                    Thread.Sleep(10);
+                    Thread.Sleep(iterationDelay);
                 }
             }
         }
@@ -115,14 +145,24 @@ namespace SudokuSolver {
         }
 
         private async Task GenerateGrid() {
-            //generate sudoku solution
-            SudokuGenerator generator = new SudokuGenerator();
 
-            if (GuaranteeCheckbox.IsChecked == true) {
-                numGrid = await generator.Generate(true, buttonArray, iterationsText);
-            } else {
-                numGrid = await generator.Generate(false, buttonArray, iterationsText);
+            bool singleSolution = (bool)GuaranteeCheckbox.IsChecked;
+            //generate sudoku solution
+            int minCellFilled = 17;
+            switch (difficulty) {
+                case 0:
+                    minCellFilled = 17;
+                    break;
+                case 1:
+                    minCellFilled = 25;
+                    break;
+                case 2: 
+                    minCellFilled = 45;
+                    break;
             }
+            SudokuGenerator generator = new SudokuGenerator(singleSolution, fg, iterationDelay, buttonArray, IterationsTextBlock, 0, minCellFilled);
+            numGrid = await generator.Generate();
+
 
             //fill in the button text to match the sudoku grid
             for (int i = 0; i < 81; i++) {
@@ -134,9 +174,9 @@ namespace SudokuSolver {
             }
         }
         private async Task SolveGrid() {
-            Solver solver = new Solver();
+            Solver solver = new Solver(accent, iterationDelay, buttonArray, IterationsTextBlock);
             if (numGrid == null || numGrid.Length != 81) return;
-            await Task.Run(() => solver.Solve(numGrid, buttonArray, iterationsText));
+            await Task.Run(() => solver.Solve(numGrid));
         }
     }
     
