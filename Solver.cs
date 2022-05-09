@@ -37,8 +37,8 @@ namespace SudokuSolver {
         public bool Solve(int[,] grid, Button[,] buttons, TextBlock iterationText) {
             if (grid == null || grid.Length != 81) return false;
 
-            for (int x = 0; x < 9; x++) {
-                for (int y = 0; y < 9; y++) {
+            for (int y = 0; y < 9; y++) {
+                for (int x = 0; x < 9; x++) {
                     if (grid[x, y] == 0) {
                         //shuffle numbers array
                         for (int n = 1; n < 10; n++) {

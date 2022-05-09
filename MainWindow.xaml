@@ -74,14 +74,14 @@
         >Solve
         </Button>
         <Button
-            Name="StopButton"
+            Name="ClearButton"
             Grid.Row="1" Grid.Column="2"
             Foreground="#222831"
             Background="#DDDDDD"
             BorderBrush="#222831"
             FontSize="14"
             Margin="3px"
-        >Stop
+        >Clear Grid
         </Button>
         <Grid
             Name="SettingsGrid"

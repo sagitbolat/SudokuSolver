@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Threading;
 
 namespace SudokuSolver {
     /// <summary>
@@ -47,6 +48,8 @@ namespace SudokuSolver {
 
             SolveButton.Click += SolveButtonPressed;
 
+            ClearButton.Click += ClearButtonPressed;
+
         }
 
         private async void GenerateButtonPressed(object sender, RoutedEventArgs e) {
@@ -65,14 +68,30 @@ namespace SudokuSolver {
             executing = false;
         }
 
+        private async void ClearButtonPressed(object sender, RoutedEventArgs e) {
+            await Task.Run(() => ClearGridAsync());
+        }
+
+        private void ClearGridAsync() {
+            for (int y = 0; y < 9; y++) {
+                for (int x = 0; x < 9; x++) {
+                    buttonArray[x, y].Dispatcher.Invoke(() => {
+                        buttonArray[x, y].Content = " ";
+                        buttonArray[x, y].Foreground = new SolidColorBrush(fg);
+                    });
+                    Thread.Sleep(10);
+                }
+            }
+        }
+
         private void ButtonSetup() {
             Brush buttonBGBrush = new SolidColorBrush(bg);
             Brush buttonFGBrush = new SolidColorBrush(fg);
             //FontFamily buttonFont = new FontFamily(new Uri("pack://application:,,,"), "FuturaBook.ttf");
 
             //iterate over the whole grid and add in the button components
-            for (int x = 0; x < 9; x++) {
-                for (int y = 0; y < 9; y++) {
+            for (int y = 0; y < 9; y++) {
+                for (int x = 0; x < 9; x++) {
                     //create button
                     Button button = new Button();
 
