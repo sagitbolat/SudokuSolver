@@ -7,8 +7,8 @@
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Background="#222831"
-        Title="SudokuSolver" Height="340" Width="408">
-    <Grid Background="#222831" Margin="5px">
+        Title="SudokuSolver" Height="357" Width="408">
+    <Grid Name = "MainGrid" Background="#222831" Margin="5px">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
@@ -143,17 +143,50 @@
                 Foreground="#DDDDDD"
                 VerticalAlignment="Bottom"
                 >Select Speed:</TextBlock>
-            <ComboBox
+            <Slider
                 Name="SpeedSelect"
-                Margin="3px" 
-                VerticalAlignment="Top"
                 Grid.Row="5"
-                SelectedIndex="0"
-            >
-                <ComboBoxItem Content="Fast"></ComboBoxItem>
-                <ComboBoxItem Content="Medium"></ComboBoxItem>
-                <ComboBoxItem Content="Slow"></ComboBoxItem>
-            </ComboBox>
+                VerticalAlignment="Center"
+                Foreground="#DDDDDD"
+                Minimum="10"
+                Maximum="100"
+                Ticks="10, 20, 30, 40, 50, 60, 70, 80, 90, 100"
+                TickPlacement="BottomRight" 
+                IsDirectionReversed="True"
+                >
+            </Slider>
+            <Grid Grid.Row="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button 
+                    Name="NumberInputButton"
+                    Grid.Column="0"
+                    Margin="3px"
+                    Content="4"
+                    Foreground="#222831"
+                    Background="#DDDDDD"
+                    BorderBrush="#222831"
+                    FontSize="14"
+                />
+                <Button 
+                    Name="CornerInputButton"
+                    Grid.Column="1"
+                    Margin="3px"
+                    Foreground="#222831"
+                    Background="#DDDDDD"
+                    BorderBrush="#222831"
+                >
+                    <TextBlock
+                        FontSize="8"
+                        Text="4"
+                        Foreground="#222831" Width="17" Height="21"
+                        TextAlignment="Right"
+                    />
+                </Button>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

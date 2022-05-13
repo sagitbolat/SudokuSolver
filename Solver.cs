@@ -12,8 +12,9 @@ using System.Threading;
 namespace SudokuSolver {
     class Solver {
 
+        public int iterationDelay;
+
         int iterations;
-        int iterationDelay;
         Color textColor;
         Button[,] buttons;
         TextBlock iterationText;

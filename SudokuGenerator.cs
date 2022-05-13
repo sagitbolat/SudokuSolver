@@ -12,17 +12,20 @@ using System.Windows.Media;
 namespace SudokuSolver {
     class SudokuGenerator {
 
+        public int iterationDelay;
+        public int minFilledCells;
+        public bool guaranteeSingleSolution;
+
         int iterations;
-        int iterationDelay;
         Color textColor;
+        Color accent;
         Button[,] buttons;
         TextBlock iterationText;
-        bool guaranteeSingleSolution;
-        int minFilledCells;
 
         public SudokuGenerator(
             bool guaranteeSingleSolution, 
-            Color textColor, 
+            Color textColor,
+            Color accent,
             int iterationDelay, 
             Button[,] buttons, 
             TextBlock iterationText, 
@@ -30,6 +33,7 @@ namespace SudokuSolver {
             int minFilledCells = 17) 
         {
             this.textColor = textColor;
+            this.accent = accent;
             this.iterationDelay = iterationDelay;
             this.buttons = buttons;
             this.iterationText = iterationText;
@@ -215,7 +219,7 @@ namespace SudokuSolver {
                 }
 
                 //Solve the Grid
-                Solver solver = new Solver(textColor, iterationDelay, buttons, iterationText, iterations);
+                Solver solver = new Solver(accent, iterationDelay, buttons, iterationText, iterations);
                 bool isSolutionUnique = true;
                 if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy);
 
