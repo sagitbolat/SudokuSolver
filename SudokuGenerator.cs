@@ -16,7 +16,6 @@ namespace SudokuSolver {
         public int minFilledCells;
         public bool guaranteeSingleSolution;
 
-        int iterations;
         Color textColor;
         Color accent;
         Button[,] buttons;
@@ -37,29 +36,28 @@ namespace SudokuSolver {
             this.iterationDelay = iterationDelay;
             this.buttons = buttons;
             this.iterationText = iterationText;
-            this.iterations = iterations;
 
             this.guaranteeSingleSolution = guaranteeSingleSolution;
             this.minFilledCells = minFilledCells;
         }
 
         //Generates a grid of integers;
-        public async Task<int[,]> Generate() {
+        public async Task<int[,]> Generate(int iterations) {
             //a 9x9 array of integers that represents our sudoku grid
             int[,] puzzleGrid = new int[9, 9];
 
             //Generate a complete solution using backtracking that fills up the grid
             Random random = new Random();
-            await Task.Run(() => GenerateCompleteSolution(puzzleGrid, random));
+            await Task.Run(() => GenerateCompleteSolution(puzzleGrid, random, ref iterations));
 
             //Remove numbers from the grid, while making sure the solution is still unique.
-            await Task.Run(() => RemoveNumbersFromGrid(puzzleGrid, random));
+            await Task.Run(() => RemoveNumbersFromGrid(puzzleGrid, random, ref iterations));
             
 
             return puzzleGrid;
         }
 
-        private void UpdateGridAndUI(int[,] grid, int num, int x, int y) {
+        private void UpdateGridAndUI(int[,] grid, int num, int x, int y, ref int iterations) {
             grid[x, y] = num;
             buttons[x,y].Dispatcher.Invoke(() =>
             {
@@ -67,19 +65,21 @@ namespace SudokuSolver {
                 Color fg = Color.FromRgb(34, 40, 49);
                 buttons[x, y].Foreground = new SolidColorBrush(fg);
             });
+            iterations++;
             Thread.Sleep(iterationDelay);
 
         }
-        private void UpdateIterationsGUI() {
+        private void UpdateIterationsGUI(ref int iterations) {
             iterations++;
+            int iter = iterations;
             iterationText.Dispatcher.Invoke(() => {
-                iterationText.Text = "Iterations: " + iterations.ToString();
+                iterationText.Text = "Iterations: " + iter.ToString();
             });
         }
 
         //Generates a sudoku grid where all the numbers are filled out. 
         //This is also the final solution that the user will arrive at.
-        private bool GenerateCompleteSolution(int[,] grid, Random random) {
+        private bool GenerateCompleteSolution(int[,] grid, Random random, ref int iterations) {
             //possible number values in a sudoku puzzle
             int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             int x = 0;
@@ -96,13 +96,13 @@ namespace SudokuSolver {
                         if (isGridValid(grid, x, y, num)) {
 
                             //update grid
-                            UpdateGridAndUI(grid, num, x, y);
-                            UpdateIterationsGUI();
+                            UpdateGridAndUI(grid, num, x, y, ref iterations);
+                            UpdateIterationsGUI(ref iterations);
 
 
                             if (!FindEmptySquare(grid)) {
                                 return true;
-                            } else if (GenerateCompleteSolution(grid, random)) {
+                            } else if (GenerateCompleteSolution(grid, random, ref iterations)) {
                                 return true;
                             }
                         }
@@ -111,8 +111,8 @@ namespace SudokuSolver {
                     break;
                 }
             }
-            UpdateGridAndUI(grid, 0, x, y);
-            UpdateIterationsGUI();
+            UpdateGridAndUI(grid, 0, x, y, ref iterations);
+            UpdateIterationsGUI(ref iterations);
 
 
             return false;
@@ -183,7 +183,7 @@ namespace SudokuSolver {
 
         //Removes numbers from a complete solution to generate a sudoku puzzle.
         //Ensures there is only one solution.
-        private void RemoveNumbersFromGrid(int[,] grid, Random random) {
+        private void RemoveNumbersFromGrid(int[,] grid, Random random, ref int iterations) {
             //count and find nonempty squares in grid.
             int nonEmptySqaresCount = 0;
             int[][] nonEmptySquares = GetNonEmptySquares(out nonEmptySqaresCount, grid);
@@ -205,8 +205,8 @@ namespace SudokuSolver {
 
                 //store the removed value and then empty the square
                 int removed_value = grid[x, y];
-                UpdateGridAndUI(grid, 0, x, y);
-                UpdateIterationsGUI();
+                UpdateGridAndUI(grid, 0, x, y, ref iterations);
+                UpdateIterationsGUI(ref iterations);
 
 
 
@@ -219,13 +219,13 @@ namespace SudokuSolver {
                 }
 
                 //Solve the Grid
-                Solver solver = new Solver(accent, iterationDelay, buttons, iterationText, iterations);
+                Solver solver = new Solver(accent, iterationDelay, buttons, iterationText);
                 bool isSolutionUnique = true;
-                if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy);
+                if (guaranteeSingleSolution) isSolutionUnique = solver.Solve(gridCopy, ref iterations);
 
                 //if solution is not unique, put the last removed number back and try again
                 if (!isSolutionUnique) {
-                    UpdateGridAndUI(grid, removed_value, x, y);
+                    UpdateGridAndUI(grid, removed_value, x, y, ref iterations);
                     nonEmptySqaresCount++;
                     currSquare--;
                     rounds--;

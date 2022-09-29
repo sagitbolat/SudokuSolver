@@ -14,21 +14,18 @@ namespace SudokuSolver {
 
         public int iterationDelay;
 
-        int iterations;
         Color textColor;
         Button[,] buttons;
         TextBlock iterationText;
 
-
-        public Solver(Color textColor, int iterationDelay, Button[,] buttons, TextBlock iterationText, int iterations = 0) {
-            iterations = 0;
+        
+        public Solver(Color textColor, int iterationDelay, Button[,] buttons, TextBlock iterationText) {
             this.textColor = textColor;
             this.iterationDelay = iterationDelay;
             this.buttons = buttons;
             this.iterationText = iterationText;
-            this.iterations = iterations;
         }
-        private void UpdateGridAndUI(int[,] grid, int num, int x, int y) {
+        private void UpdateGridAndUI(int[,] grid, int num, int x, int y, ref int iterations) {
             grid[x, y] = num;
             buttons[x, y].Dispatcher.Invoke(() => {
                 buttons[x, y].Content = num > 0 ? num.ToString() : " ";
@@ -38,14 +35,15 @@ namespace SudokuSolver {
             Thread.Sleep(iterationDelay);
             
         }
-        private void UpdateIterationsGUI() {
+        private void UpdateIterationsGUI(ref int iterations) {
             iterations++;
+            int iter = iterations;
             iterationText.Dispatcher.Invoke(() => {
-                iterationText.Text = "Iterations: " + iterations.ToString();
+                iterationText.Text = "Iterations: " + iter.ToString();
             });
         }
 
-        public bool Solve(int[,] grid) {
+        public bool Solve(int[,] grid, ref int iterations) {
             if (grid == null || grid.Length != 81) return false;
 
             for (int y = 0; y < 9; y++) {
@@ -54,10 +52,10 @@ namespace SudokuSolver {
                         //shuffle numbers array
                         for (int n = 1; n < 10; n++) {
                             if (SudokuGenerator.isGridValid(grid, x, y, n)) {
-                                UpdateGridAndUI(grid, n, x, y);
-                                UpdateIterationsGUI();
-                                if (Solve(grid)) return true;
-                                else UpdateGridAndUI(grid, 0, x, y);
+                                UpdateGridAndUI(grid, n, x, y, ref iterations);
+                                UpdateIterationsGUI(ref iterations);
+                                if (Solve(grid, ref iterations)) return true;
+                                else UpdateGridAndUI(grid, 0, x, y, ref iterations);
                             }
                         }
                         return false;

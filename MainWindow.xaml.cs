@@ -29,6 +29,7 @@ namespace SudokuSolver {
         
         
         TextBlock iterationsText;
+        int iterations = 0;
         bool executing = false;
         bool gridClear = true;
         int minCellFilled = 17;
@@ -150,16 +151,16 @@ namespace SudokuSolver {
 
 
             //move selection if arrow key is pressed
-            if (e.Key == Key.S) {
+            if (e.Key == Key.S || e.Key == Key.Down) {
                 ChangeSelectedButton(buttonArray[x, y == 8 ? 0 : y + 1]);
                 return;
-            } else if (e.Key == Key.W) {
+            } else if (e.Key == Key.W || e.Key == Key.Up) {
                 ChangeSelectedButton(buttonArray[x, y == 0 ? 8 : y - 1]);
                 return;
-            } else if (e.Key == Key.A) {
+            } else if (e.Key == Key.A || e.Key == Key.Left) {
                 ChangeSelectedButton(buttonArray[x == 0 ? 8 : x - 1, y]);
                 return;
-            } else if (e.Key == Key.D) {
+            } else if (e.Key == Key.D || e.Key == Key.Right ) {
                 ChangeSelectedButton(buttonArray[x == 8 ? 0 : x + 1, y]);
                 return;
             }
@@ -230,6 +231,7 @@ namespace SudokuSolver {
         }
 
         private void ClearGridAsync() {
+            iterations = 0;
             for (int y = 0; y < 9; y++) {
                 for (int x = 0; x < 9; x++) {
                     buttonArray[x, y].Dispatcher.Invoke(() => {
@@ -280,7 +282,7 @@ namespace SudokuSolver {
         }
 
         private async Task GenerateGrid() {
-
+            
             bool singleSolution = (bool)GuaranteeCheckbox.IsChecked;
             //generate sudoku solution
             if (generator == null) 
@@ -290,7 +292,7 @@ namespace SudokuSolver {
                 generator.iterationDelay = iterationDelay;
                 generator.minFilledCells = minCellFilled;
             }
-            numGrid = await generator.Generate();
+            numGrid = await generator.Generate(iterations);
             userSolutionGrid = new int[9, 9];
             //copy generated grid to user solution grid, and toggle mutable cells
             for (int i = 0; i < 81; i++) {
@@ -315,7 +317,7 @@ namespace SudokuSolver {
                 solver.iterationDelay = iterationDelay;
             }
             if (numGrid == null || numGrid.Length != 81) return;
-            await Task.Run(() => solver.Solve(numGrid));
+            await Task.Run(() => solver.Solve(numGrid, ref iterations));
 
             for (int i = 0; i < 81; i++) {
                 mutable[i % 9, i / 9] = false;
